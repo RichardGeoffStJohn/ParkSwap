@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String        @id @default(cuid())
+  email             String        @unique
+  name              String
+  unitNumber        String
+  hasAccessibleSpot Boolean       @default(false)
+  spotIdentifier    String?
+  isAdmin           Boolean       @default(false)
+  passwordHash      String
+  createdAt         DateTime      @default(now())
+
+  swapRequests  SwapRequest[] @relation("Requester")
+  acceptedSwaps SwapRequest[] @relation("Acceptor")
+}
+
+model SwapRequest {
+  id          String            @id @default(cuid())
+  requesterId String
+  requester   User              @relation("Requester", fields: [requesterId], references: [id])
+  date        DateTime          @db.Date
+  reason      String?
+  status      SwapRequestStatus @default(OPEN)
+  acceptorId  String?
+  acceptor    User?             @relation("Acceptor", fields: [acceptorId], references: [id])
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+enum SwapRequestStatus {
+  OPEN
+  ACCEPTED
+  CANCELLED
+}
